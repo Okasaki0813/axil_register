@@ -2,7 +2,6 @@
 `ifndef AXIL_REGISTER_REG_ADAPTER_SV
 `define AXIL_REGISTER_REG_ADAPTER_SV
 
-import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class axil_register_reg_adapter extends uvm_reg_adapter;

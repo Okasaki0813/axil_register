@@ -6,8 +6,8 @@
 class axil_register_env extends uvm_env;
     `uvm_component_utils(axil_register_env)
 
-    axil_register_agent             agt;
-    axil_register_agent             slv_agt;
+    axil_register_master_agent      agt;
+    axil_register_slave_agent       slv_agt;
     axil_register_scoreboard        scb;
     axil_register_coverage          cov;
     axil_register_virtual_sequencer virt_sqr;
@@ -33,9 +33,12 @@ class axil_register_env extends uvm_env;
         uvm_config_db#(axil_register_config)::set(this, "agt*", "cfg", cfg);
         uvm_config_db#(axil_register_config)::set(this, "slv_agt*", "cfg", cfg);
     
-        agt = axil_register_agent::type_id::create("agt", this);
-        slv_agt = axil_register_agent::type_id::create("slv_agt", this);
+        agt = axil_register_master_agent::type_id::create("agt", this);
+        `uvm_info(get_type_name(), "Created master agent", UVM_LOW)
+        slv_agt = axil_register_slave_agent::type_id::create("slv_agt", this);
+        `uvm_info(get_type_name(), "Created slave agent", UVM_LOW)
         virt_sqr = axil_register_virtual_sequencer::type_id::create("virt_sqr", this);
+        `uvm_info(get_type_name(), "Created virtual sequencer", UVM_LOW)
 
         if(cfg.enable_scb) begin
             scb = axil_register_scoreboard::type_id::create("scb", this);
@@ -66,6 +69,7 @@ class axil_register_env extends uvm_env;
 
         agt.mon.ap.connect(reg_predictor.bus_in);
         virt_sqr.agt_sqr = agt.sqr;
+        virt_sqr.vif = agt.vif;  // 将虚拟接口传递给虚拟 sequencer
 
         if(cfg.enable_scb) begin
             agt.mon.ap.connect(scb.exp_fifo.analysis_export);
@@ -74,6 +78,7 @@ class axil_register_env extends uvm_env;
 
         if(cfg.enable_cov) begin
             agt.mon.ap.connect(cov.analysis_export);
+        end
 
         // 关闭隐式预测，开启显式预测
         rm.default_map.set_auto_predict(0);

@@ -12,7 +12,7 @@ class axil_register_smoke_virt_seq extends axil_register_base_virtual_sequence;
         axil_register_read_seq   rd_seq;
 
         `uvm_info(get_type_name(), "Executing Smoke Virtual Sequence...", UVM_LOW)
-        // get_type_name用于获取类型名，get_full_name用于获取实例名
+        // get_type_name()用于获取类型名，get_full_name()用于获取实例名
         
         // 1. 执行写操作
         `uvm_do_on_with(wr_seq, p_sequencer.agt_sqr, {

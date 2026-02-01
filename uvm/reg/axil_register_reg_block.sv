@@ -1,7 +1,6 @@
 `ifndef AXIL_REGISTER_REG_BLOCK_SV
 `define AXIL_REGISTER_REG_BLOCK_SV
 
-import uvm_pkg::*;
 `include "uvm_macros.svh"
 
 class axil_register_reg_block extends uvm_reg_block;

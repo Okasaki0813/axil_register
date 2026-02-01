@@ -216,7 +216,7 @@ end else if (AW_REG_TYPE == 1) begin
     assign m_axil_wr.awuser   = AWUSER_EN ? m_axil_awuser_reg : '0;
     assign m_axil_wr.awvalid  = m_axil_awvalid_reg;
 
-    // enable ready input next cycle if output buffer will be empty
+    // 作为从机，只有当下一个周期没有数据要发送时，才准备好接收新的地址
     wire s_axil_awready_early = !m_axil_awvalid_next;
 
     always_comb begin

@@ -1,9 +1,10 @@
 RTL_DIR  = ./rtl
-UVM_DIR  = ./uvm
+UVM_DIR  = ./uvm/vip_lib
 SEQ_DIR  = ./uvm/seq_lib
 TEST_DIR = ./uvm/test
 REG_DIR  = ./uvm/reg
 ENV_DIR  = ./uvm/env
+CFG_DIR  = ./uvm/cfg
 
 all: clean compile run
 
@@ -18,7 +19,8 @@ UVM_FILES = $(UVM_DIR)/axil_register_transaction.sv \
 			$(UVM_DIR)/axil_register_driver.sv \
 			$(UVM_DIR)/axil_slave_driver.sv \
 			$(UVM_DIR)/axil_register_monitor.sv \
-			$(UVM_DIR)/axil_register_agent.sv \
+			$(UVM_DIR)/axil_register_master_agent.sv \
+			$(UVM_DIR)/axil_register_slave_agent.sv \
 			$(UVM_DIR)/axil_register_coverage.sv 
 
 REG_FILES = $(REG_DIR)/axil_register_reg_data.sv \
@@ -37,16 +39,22 @@ SEQ_FILES = $(SEQ_DIR)/axil_register_base_virtual_sequence.sv \
 			$(SEQ_DIR)/axil_register_ral_virt_seq.sv \
 			$(SEQ_DIR)/axil_register_wstrb_virt_seq.sv \
             $(SEQ_DIR)/axil_register_sequence.sv \
-			$(SEQ_DIR)/axil_register_ral_field_virt_seq.sv
+			$(SEQ_DIR)/axil_register_ral_field_virt_seq.sv \
+			$(SEQ_DIR)/axil_register_reset_virt_seq.sv \
+			$(SEQ_DIR)/axil_register_addr_decode_virt_seq.sv
 			
 TEST_FILES = $(TEST_DIR)/axil_register_base_test.sv \
              $(TEST_DIR)/axil_register_smoke_test.sv \
              $(TEST_DIR)/axil_register_random_test.sv \
 			 $(TEST_DIR)/axil_register_ral_test.sv \
 			 $(TEST_DIR)/axil_register_wstrb_test.sv \
-			 $(TEST_DIR)/axil_register_ral_field_test.sv
+			 $(TEST_DIR)/axil_register_ral_field_test.sv \
+			 $(TEST_DIR)/axil_register_reset_test.sv \
+			 $(TEST_DIR)/axil_register_addr_decode_test.sv
 
 TOP_FILES = $(UVM_DIR)/axil_register_top.sv
+
+CFG_FILES = $(CFG_DIR)/axil_register_config.sv
 
 COV_OPTS = -cm line+cond+tgl+fsm+branch+assert
 
@@ -59,10 +67,12 @@ compile:
 	+incdir+$(ENV_DIR) \
 	+incdir+$(SEQ_DIR) \
 	+incdir+$(TEST_DIR) \
+	+incdir+$(CFG_DIR) \
 	-assert svaext \
 	$(COV_OPTS) \
 	$(RTL_FILES) \
 	$(UVM_FILES) \
+	$(CFG_FILES) \
 	$(REG_FILES) \
 	$(ENV_FILES) \
 	$(SEQ_FILES) \
@@ -84,7 +94,7 @@ compile:
 # 	-o simv: 指定生成的二进制仿真可执行文件的名称。如果不指定，默认为 simv。
 
 run:
-	./simv +UVM_TESTNAME=axil_register_ral_field_test \
+	./simv +UVM_TESTNAME=axil_register_reset_test \
 	+UVM_VERBOSITY=UVM_HIGH \
 	$(COV_OPTS) \
 	 -l run.log

@@ -2,6 +2,7 @@ class axil_register_virtual_sequencer extends uvm_sequencer;
   `uvm_component_utils(axil_register_virtual_sequencer)
   
   axil_register_sequencer agt_sqr;
+  virtual taxi_axil_if    vif;
 
   function new (string name = "axil_register_virtual_sequencer", uvm_component parent);
     super.new(name, parent);
