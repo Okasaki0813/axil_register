@@ -35,6 +35,7 @@ class axil_register_driver extends uvm_driver#(axil_register_transaction); // #º
     extern task drive_transfer(axil_register_transaction tr);
 endclass
 
+// ¸ÃÈÎÎñ¸ºÔğ½«Êı¾İ°´ÕÕĞ­ÒéÊ±Ğò·¢ËÍ¸øDUT
 task axil_register_driver::drive_transfer(axil_register_transaction tr);
     int aw_wait_cnt = 0;
     int w_wait_cnt  = 0;
@@ -44,24 +45,21 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
 
     repeat(tr.delay) @(posedge vif.clk); // ÎªÊ²Ã´ÕâÀïÒªµÈ´ı¼¸¸öÊ±ÖÓÖÜÆÚ£¿
                                          // ÑéÖ¤²»Í¬ÑÓ³ÙÏÂÄ£¿é¹¤×÷µÄÎÈ¶¨ĞÔ
-                                         // delay´ó£¬±£³Ö¿ÕÏĞ
-                                         // delayĞ¡£¬ÊµÏÖÁ¬Ğø´«Êä
+                                         // ÓĞdelayÊ±£¬Ä£¿é±£³Ö¿ÕÏĞ
+                                         // ÎŞdelayÊ±£¬Ä£¿é½øĞĞÁ¬Ğø´«Êä
 
     `uvm_info(get_type_name(), $sformatf("drive_transfer: op=%0d addr=0x%0h data=0x%0h strb=0x%0h", tr.operation, tr.addr, tr.data, tr.strb), UVM_MEDIUM)
 
-    if(tr.operation == axil_register_transaction::WRITE) begin // ÎªÊ²Ã´ÒªÔÚWRITEÇ°Ãæ¼ÓÉÏaxil_register_transaction£¿²»¼Ó²»ĞĞÂğ£¿
-                                                               // ÈÃ±àÒëÆ÷ÔÚ±äÁ¿WRITE¶ÔÓ¦µÄÀàÖĞËÑË÷¸Ã±äÁ¿
-        // `uvm_info(get_type_name(), $sformatf("Starting WRITE: addr='h%0h, data='h%0h", tr.addr, tr.data), UVM_LOW)
+    if(tr.operation == axil_register_transaction::WRITE) begin // ÔÚWRITEÇ°Ãæ¼ÓÉÏaxil_register_transaction£¬ÊÇÎªÁËÈÃ±àÒëÆ÷ÔÚ±äÁ¿WRITE¶ÔÓ¦µÄÀàÖĞËÑË÷¸Ã±äÁ¿
         `uvm_info(get_type_name(), "drive_transfer: starting AW/W parallel handshake", UVM_MEDIUM)
 
-        // Çı¶¯ AW/W Í¨µÀ£¬²¢ÔÚ¿ÉÄÜµÄµÈ´ıµãÔö¼ÓÖÜÆÚĞÔµ÷ÊÔÊä³ö£¬·ÀÖ¹³¤Ê±¼ä×èÈûÄÑÒÔ¶¨Î»
-        fork
+        fork // Ê¹ÓÃfork-join½á¹¹·Ö±ğÇı¶¯AWºÍWÍ¨µÀÊÇÎªÁË½âñî¶şÕßµÄÎÕÊÖ¹ı³Ì
             begin // Çı¶¯AWÍ¨µÀ
                 vif.awaddr  <= tr.addr;
                 vif.awprot  <= tr.prot;
                 vif.awuser  <= tr.user;
                 vif.awvalid <= 1'b1;
-                // µÈ´ı awready£¬²¢ÔÚÃ¿ 100 ¸öÊ±ÖÓÖÜÆÚ´òÓ¡Ò»´Î×´Ì¬
+                // µÈ´ı awready£¬²¢ÇÒÃ¿¸ô 100 ¸öÊ±ÖÓÖÜÆÚ´òÓ¡Ò»´Î×´Ì¬
                 while (!vif.awready) begin
                     @(posedge vif.clk);
                     aw_wait_cnt++;
@@ -75,11 +73,10 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
             end
 
             begin // Çı¶¯WÍ¨µÀ
-                // Í¬ÉÏ£º¶ÔĞ´Êı¾İÍ¨µÀÒ²Ê¹ÓÃ×èÈû¸³Öµ
-                vif.wdata   = tr.data;
-                vif.wstrb   = tr.strb;
-                vif.wuser   = tr.user;
-                vif.wvalid  = 1'b1;
+                vif.wdata   <= tr.data;
+                vif.wstrb   <= tr.strb;
+                vif.wuser   <= tr.user;
+                vif.wvalid  <= 1'b1;
                 while (!vif.wready) begin
                     @(posedge vif.clk);
                     w_wait_cnt++;
@@ -88,7 +85,7 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
                     end
                 end
                 @(posedge vif.clk);
-                vif.wvalid = 1'b0;
+                vif.wvalid <= 1'b0;
                 `uvm_info(get_type_name(), $sformatf("W handshake done after %0d cycles, wready=%0b", w_wait_cnt, vif.wready), UVM_LOW)
             end
         join
@@ -112,16 +109,15 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
         tr.resp = vif.bresp; // ½«ÏìÓ¦½á¹û´æÈëÊı¾İ°üÖĞ£¬·½±ãºóÃæscoreboard½øĞĞ¼ì²é
 
         @(posedge vif.clk);
-        vif.bready = 1'b0;
+        vif.bready <= 1'b0;
         `uvm_info(get_type_name(), $sformatf("drive_transfer: write complete, resp=0x%0h" , tr.resp), UVM_LOW)
     end else if (tr.operation == axil_register_transaction::READ) begin
         `uvm_info(get_type_name(), $sformatf("drive_transfer: starting READ addr=0x%0h", tr.addr), UVM_MEDIUM)
 
-        // ¶ÁÇëÇóÍ¬ÑùÊ¹ÓÃ×èÈû¸³ÖµÒÔ±£Ö¤Ê±ĞòÒ»ÖÂĞÔ
-        vif.araddr  = tr.addr;
-        vif.arprot  = tr.prot;
-        vif.aruser  = tr.user;
-        vif.arvalid = 1'b1;
+        vif.araddr  <= tr.addr;
+        vif.arprot  <= tr.prot;
+        vif.aruser  <= tr.user;
+        vif.arvalid <= 1'b1;
 
         while (!vif.arready) begin
             @(posedge vif.clk);
@@ -132,8 +128,8 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
         end
 
         @(posedge vif.clk);
-        vif.arvalid = 1'b0;
-        vif.rready = 1'b1;
+        vif.arvalid <= 1'b0;
+        vif.rready  <= 1'b1;
 
         while (!vif.rvalid) begin
             @(posedge vif.clk);
@@ -145,11 +141,11 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
 
         `uvm_info(get_type_name(), $sformatf("R valid seen after %0d cycles, rvalid=%0b rresp=0x%0h rdata=0x%0h", r_wait_cnt, vif.rvalid, vif.rresp, vif.rdata), UVM_LOW)
 
-        tr.data = vif.rdata;
-        tr.resp = vif.rresp;
+        tr.data <= vif.rdata;
+        tr.resp <= vif.rresp;
 
         @(posedge vif.clk);
-        vif.rready = 1'b0;
+        vif.rready <= 1'b0;
         `uvm_info(get_type_name(), $sformatf("drive_transfer: read complete, resp=0x%0h data=0x%0h" , tr.resp, tr.data), UVM_LOW)
     end
 endtask

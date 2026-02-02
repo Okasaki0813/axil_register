@@ -1,3 +1,6 @@
+`ifndef AXIL_REGISTER_TRANSACTION_SV
+`define AXIL_REGISTER_TRANSACTION_SV
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 
@@ -5,7 +8,7 @@ class axil_register_transaction extends uvm_sequence_item;
 
     rand logic [31:0] addr;
     rand logic [31:0] data;
-    rand logic [3:0]  strb; // ะดัฺย๋
+    rand logic [3:0]  strb;
     rand logic [2:0]  prot;
     rand logic [31:0] user;
     logic      [1:0]  resp;
@@ -34,3 +37,5 @@ class axil_register_transaction extends uvm_sequence_item;
     endfunction
 
 endclass
+
+`endif // AXIL_REGISTER_TRANSACTION_SV

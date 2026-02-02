@@ -5,7 +5,7 @@
 
 class axil_slave_driver extends axil_register_driver;
     `uvm_component_utils(axil_slave_driver)
-    virtual taxi_axil_if vif; // 建议不要在定义时带 modport，在 connect 时指定即可
+    virtual taxi_axil_if vif;
     
     // 声明类级别的标志位和存储器
     bit aw_done = 1'b0; // 写地址通道握手标志位

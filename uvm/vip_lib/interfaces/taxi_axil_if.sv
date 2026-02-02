@@ -19,8 +19,7 @@ interface taxi_axil_if #(
     parameter STRB_W = (DATA_W/8), // 写掩码位宽，对应数据总线位宽的字节数，Strobe Width
     
     // Use awuser signal
-    parameter logic AWUSER_EN = 1'b0, // aw是Address Write，即写地址
-                                      // 是否启用写地址用户自定义信号
+    parameter logic AWUSER_EN = 1'b0, // aw是Address Write，即写地址是否启用写地址用户自定义信号
     // Width of awuser signal
     parameter AWUSER_W = 1, // 写地址用户信号位宽
 
