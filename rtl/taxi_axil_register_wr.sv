@@ -22,55 +22,39 @@ Authors:
  */
 module taxi_axil_register_wr #
 (
-    // AW channel register type
-    parameter AW_REG_TYPE = 1, // unsigned int
-    // W channel register type
+    parameter AW_REG_TYPE = 1,
     parameter W_REG_TYPE = 1,
-    // B channel register type
     parameter B_REG_TYPE = 1
 )
 (
     input  wire logic    clk,
     input  wire logic    rst,
 
-    /*
-     * AXI4-Lite slave interface
-     * 作用：连接上游设备（Master），接收写操作请求
-     */
-    taxi_axil_if.wr_slv  s_axil_wr, // 写通道从机口
-
-    /*
-     * AXI4-Lite master interface
-     * 作用：连接下游设备（Slave），发送处理后的写操作请求
-     */
-    taxi_axil_if.wr_mst  m_axil_wr // 写通道主机口
+    taxi_axil_if.wr_slv  s_axil_wr,
+    taxi_axil_if.wr_mst  m_axil_wr
 );
 
-// extract parameters 提取参数
-// localparam是局部参数，这种参数的作用范围是仅限于该模块内部
-// parameter可由顶层模块在实例化时修改，而localparam无法由外部修改
+
 localparam DATA_W = s_axil_wr.DATA_W;
 localparam ADDR_W = s_axil_wr.ADDR_W;
 localparam STRB_W = s_axil_wr.STRB_W;
 
-// 判断是否启用用户自定义信号
-// 用户自定义信号是用来干嘛的？
-// 为什么要主机和从机都启用用户自定义信号才生效呢？只有当Master和Slave都支持时才需要连接
-localparam logic AWUSER_EN = s_axil_wr.AWUSER_EN && m_axil_wr.AWUSER_EN;
-localparam AWUSER_W = s_axil_wr.AWUSER_W;
-localparam logic WUSER_EN = s_axil_wr.WUSER_EN && m_axil_wr.WUSER_EN;
-localparam WUSER_W = s_axil_wr.WUSER_W;
-localparam logic BUSER_EN = s_axil_wr.BUSER_EN && m_axil_wr.BUSER_EN;
-localparam BUSER_W = s_axil_wr.BUSER_W;
+localparam logic    AWUSER_EN = s_axil_wr.AWUSER_EN && m_axil_wr.AWUSER_EN;
+localparam          AWUSER_W  = s_axil_wr.AWUSER_W;
 
-// 检查数据宽度和写掩码是否匹配
+localparam logic    WUSER_EN  = s_axil_wr.WUSER_EN  && m_axil_wr.WUSER_EN;
+localparam          WUSER_W   = s_axil_wr.WUSER_W;
+
+localparam logic    BUSER_EN  = s_axil_wr.BUSER_EN  && m_axil_wr.BUSER_EN;
+localparam          BUSER_W   = s_axil_wr.BUSER_W;
+
+// 检查写通道主机口的数据宽度和写掩码宽度是否与匹配
 if (m_axil_wr.DATA_W != DATA_W)
-    $fatal(0, "Error: Interface DATA_W parameter mismatch (instance %m)"); // 这里的%m是当前模块的层次化路径名？
+    $fatal(0, "Error: Interface DATA_W parameter mismatch (instance %m)");
 
 if (m_axil_wr.STRB_W != STRB_W)
     $fatal(0, "Error: Interface STRB_W parameter mismatch (instance %m)");
 
-// AW channel
 // 写地址通道处理逻辑
 
 if (AW_REG_TYPE > 1) begin
@@ -193,11 +177,6 @@ if (AW_REG_TYPE > 1) begin
     end
 
 end else if (AW_REG_TYPE == 1) begin
-    // simple register, inserts bubble cycles
-    // 简单缓冲模式
-    // 单级寄存器、有气泡周期
-
-    // datapath registers
     logic                 s_axil_awready_reg = 1'b0;
 
     logic [ADDR_W-1:0]    m_axil_awaddr_reg   = '0;
@@ -216,29 +195,26 @@ end else if (AW_REG_TYPE == 1) begin
     assign m_axil_wr.awuser   = AWUSER_EN ? m_axil_awuser_reg : '0;
     assign m_axil_wr.awvalid  = m_axil_awvalid_reg;
 
-    // 作为从机，只有当下一个周期没有数据要发送时，才准备好接收新的地址
-    wire s_axil_awready_early = !m_axil_awvalid_next;
+    wire s_axil_awready_early = !m_axil_awvalid_next; // 下一个时钟周期中，该模块作为从设备是否准备好从上游设备中接受写地址请求，这取决于当前时钟周期中，该模块是否准备好作为主设备向下游设备发送写地址
 
     always_comb begin
-        // transfer sink ready state to source
         m_axil_awvalid_next = m_axil_awvalid_reg;
 
         store_axil_aw_input_to_output = 1'b0;
 
-        if (s_axil_awready_reg) begin
-            m_axil_awvalid_next = s_axil_wr.awvalid;
-            store_axil_aw_input_to_output = 1'b1;
-        end else if (m_axil_wr.awready) begin
-            m_axil_awvalid_next = 1'b0;
+        if (s_axil_awready_reg) begin // 该模块在当前时钟周期中准备好作为从设备接收来自上游设备的写地址请求
+            m_axil_awvalid_next = s_axil_wr.awvalid; // 下一个时钟周期中，该模块准备好将写地址请求发送给下游设备
+            store_axil_aw_input_to_output = 1'b1; // 将写地址请求输入到主寄存器中
+        end else if (m_axil_wr.awready) begin // 当前周期中，该模块未准备好接收上游设备发送的写地址请求，但其下游设备准备好接收写地址请求
+            m_axil_awvalid_next = 1'b0; // 下一个时钟周期中，该模块不准备好作为主设备向下游设备发送写地址请求
         end
     end
 
     always_ff @(posedge clk) begin
-        s_axil_awready_reg <= s_axil_awready_early;
-        m_axil_awvalid_reg <= m_axil_awvalid_next;
+        s_axil_awready_reg <= s_axil_awready_early; // 更新该模块作为从设备的准备状态
+        m_axil_awvalid_reg <= m_axil_awvalid_next; // 更新该模块作为主设备的准备状态
 
-        // datapath
-        if (store_axil_aw_input_to_output) begin
+        if (store_axil_aw_input_to_output) begin // 该设备将从上游设备中接收到的写地址请求写入到主寄存器中
             m_axil_awaddr_reg <= s_axil_wr.awaddr;
             m_axil_awprot_reg <= s_axil_wr.awprot;
             m_axil_awuser_reg <= s_axil_wr.awuser;
@@ -353,15 +329,14 @@ if (W_REG_TYPE > 1) begin
     end
 
 end else if (W_REG_TYPE == 1) begin
-    // simple register, inserts bubble cycles
-
     // datapath registers
     logic                s_axil_wready_reg = 1'b0;
 
     logic [DATA_W-1:0]   m_axil_wdata_reg  = '0;
     logic [STRB_W-1:0]   m_axil_wstrb_reg  = '0;
     logic [WUSER_W-1:0]  m_axil_wuser_reg  = '0;
-    logic                m_axil_wvalid_reg = 1'b0, m_axil_wvalid_next;
+    logic                m_axil_wvalid_reg = 1'b0, 
+    logic                m_axil_wvalid_next;
 
     // datapath control
     logic store_axil_w_input_to_output;
@@ -373,11 +348,9 @@ end else if (W_REG_TYPE == 1) begin
     assign m_axil_wr.wuser  = WUSER_EN ? m_axil_wuser_reg : '0;
     assign m_axil_wr.wvalid = m_axil_wvalid_reg;
 
-    // enable ready input next cycle if output buffer will be empty
     wire s_axil_wready_early = !m_axil_wvalid_next;
 
     always_comb begin
-        // transfer sink ready state to source
         m_axil_wvalid_next = m_axil_wvalid_reg;
 
         store_axil_w_input_to_output = 1'b0;
@@ -511,7 +484,8 @@ end else if (B_REG_TYPE == 1) begin
 
     logic [1:0]          s_axil_bresp_reg  = 2'b0;
     logic [BUSER_W-1:0]  s_axil_buser_reg  = '0;
-    logic                s_axil_bvalid_reg = 1'b0, s_axil_bvalid_next;
+    logic                s_axil_bvalid_reg = 1'b0, 
+    logic                s_axil_bvalid_next;
 
     // datapath control
     logic store_axil_b_input_to_output;
@@ -522,11 +496,9 @@ end else if (B_REG_TYPE == 1) begin
     assign s_axil_wr.buser  = BUSER_EN ? s_axil_buser_reg : '0;
     assign s_axil_wr.bvalid = s_axil_bvalid_reg;
 
-    // enable ready input next cycle if output buffer will be empty
     wire m_axil_bready_early = !s_axil_bvalid_next;
 
     always_comb begin
-        // transfer sink ready state to source
         s_axil_bvalid_next = s_axil_bvalid_reg;
 
         store_axil_b_input_to_output = 1'b0;
@@ -568,3 +540,11 @@ end
 endmodule
 
 `resetall
+
+// 简单缓冲模式下，AW、W、B通道的处理数据的逻辑
+// 在简单缓冲模式下，各个通道分别使用一个寄存器组来存储数据
+// 状态1：寄存器组为空 -> 该模块可以接收上游设备发来的数据，但无法向下游设备发送数据
+// 状态2：寄存器组准备发送数据 -> 该模块无法接收上游设备发来的数据，但可以向下游设备发送数据
+// 状态3：寄存器组正在发送数据 -> 该模块无法接收上游设备发来的数据，正在向下游设备发送数据
+// 状态转换：当上游设备发送数据且该模块准备好接收时，寄存器组从空变满；当下游设备准备好接收数据且该模块有数据要发送时，寄存器组从满变空
+// 这种设计会引入气泡周期，该情况会发生在寄存器组为空且上游设备没有打算发送数据时

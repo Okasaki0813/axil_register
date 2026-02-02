@@ -33,7 +33,7 @@ a testbench for register run on the basis of AXI4-Lite and UVM, using SystemVeri
 	- 验证全局复位（`rst` 信号）对系统的影响：施加复位并验证所有握手信号（valid/ready）是否正确回到初始状态。
 	- **使用指南**: 详见 [RESET_TEST_GUIDE.md](RESET_TEST_GUIDE.md) 与 [RESET_TEST_QUICKREF.md](RESET_TEST_QUICKREF.md)
 
-- 地址译码与非法地址处理测试（新增）
+- 地址译码与非法地址处理测试（新增）（目前没跑通）
 	- `axil_register_addr_decode_test.sv` / `axil_register_addr_decode_virt_seq.sv`
 	- 验证不同地址范围的读写正确性、字对齐要求、部分字写入（WSTRB 掩码）、以及合法地址均返回 OKAY 响应。
 	- **使用指南**: 详见 [ADDR_DECODE_TEST_GUIDE.md](ADDR_DECODE_TEST_GUIDE.md) 与 [ADDR_DECODE_TEST_QUICKREF.md](ADDR_DECODE_TEST_QUICKREF.md)
@@ -59,7 +59,4 @@ a testbench for register run on the basis of AXI4-Lite and UVM, using SystemVeri
 - 随机/边界地址访问以增加时序与总线交互覆盖
 - 通过 monitor/scoreboard 验证数据一致性和事务匹配
 - **全局复位（NEW）**: 异步复位信号施加与释放后的状态初始化
-- **地址译码（NEW）**: 不同地址空间的读写正确性和响应码验证
-
-
-
+- **地址译码（NEW）**: 不同地址空间的读写正确性和响应码验证（目前没跑通）
