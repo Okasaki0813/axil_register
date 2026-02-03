@@ -1,4 +1,3 @@
-// 寄存器的管理器，负责将多个uvm_reg实例组织在一起，并定义它们的基地址和地址映射表
 `ifndef AXIL_REGISTER_REG_DATA_SV
 `define AXIL_REGISTER_REG_DATA_SV
 
@@ -17,8 +16,17 @@ class axil_register_reg_data extends uvm_reg;
 
     virtual function void build();
         fld_low = uvm_reg_field::type_id::create("fld_low");
-        // 参数：父类，位宽，最低位位置，访问权限，是否易失，复位值，是否有复位，是否可随机，是否可单独存取
         fld_low.configure(this, 16, 0, "RW", 0, 16'h0, 1, 1, 1);
+        // 参数详解：
+        // 1. this: 父寄存器
+        // 2. 16: 字段位宽
+        // 3. 0: 最低位位置（LSB位置）
+        // 4. "RW": 访问权限（RW/RO/WO等）
+        // 5. 0: 是否易失（volatile），0=非易失，1=易失
+        // 6. 16'h0: 复位值
+        // 7. 1: 是否有复位（1=有）
+        // 8. 1: 是否可随机化（1=可随机）
+        // 9. 1: 是否可单独存取（1=可单独访问）
 
         fld_high = uvm_reg_field::type_id::create("fld_high");
         // 注意：起始位置设为 16

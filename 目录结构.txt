@@ -1,0 +1,79 @@
+卷 Windows 的文件夹 PATH 列表
+卷序列号为 1ACE-6D77
+C:\CENTOS7\CENTOS7\CENTOS7\SHAREDFOLDER\TAXI_AXIL_REGISTER
+|   Makefile
+|   README.md
+|   目录结构.txt
+|   
++---rtl
+|       taxi_axil_register.f
+|       taxi_axil_register.sv
+|       taxi_axil_register_rd.sv
+|       taxi_axil_register_wr.sv
+|       
+\---uvm
+    +---cfg
+    |       axil_register_config.sv
+    |       
+    +---env
+    |       axil_register_coverage.sv
+    |       axil_register_env.sv
+    |       axil_register_reg_adapter.sv
+    |       axil_register_reg_predictor.sv
+    |       axil_register_scoreboard.sv
+    |       axil_register_top.sv
+    |       axil_register_virtual_sequencer.sv
+    |       
+    +---reg
+    |       axil_register_reg_block.sv
+    |       axil_register_reg_data.sv
+    |       
+    +---seq_lib
+    |       axil_register_addr_decode_virt_seq.sv
+    |       axil_register_base_virtual_sequence.sv
+    |       axil_register_ral_field_virt_seq.sv
+    |       axil_register_ral_virt_seq.sv
+    |       axil_register_random_virt_seq.sv
+    |       axil_register_read_seq.sv
+    |       axil_register_reset_virt_seq.sv
+    |       axil_register_sequence.sv
+    |       axil_register_smoke_virt_seq.sv
+    |       axil_register_write_seq.sv
+    |       axil_register_wstrb_virt_seq.sv
+    |       
+    +---test
+    |       axil_register_addr_decode_test.sv
+    |       axil_register_base_test.sv
+    |       axil_register_ral_field_test.sv
+    |       axil_register_ral_test.sv
+    |       axil_register_random_test.sv
+    |       axil_register_reset_test.sv
+    |       axil_register_smoke_test.sv
+    |       axil_register_wstrb_test.sv
+    |       
+    \---vip_lib
+        +---components
+        |   +---agents
+        |   |       axil_register_agent.sv
+        |   |       axil_register_master_agent.sv
+        |   |       axil_register_slave_agent.sv
+        |   |       
+        |   +---drivers
+        |   |       axil_register_base_driver.sv
+        |   |       axil_register_master_driver.sv
+        |   |       axil_register_slave_driver.sv
+        |   |       
+        |   +---monitors
+        |   |       axil_register_base_monitor.sv
+        |   |       axil_register_master_monitor.sv
+        |   |       axil_register_slave_monitor.sv
+        |   |       
+        |   \---sequencers
+        |           axil_register_sequencer.sv
+        |           
+        +---interfaces
+        |       taxi_axil_if.sv
+        |       
+        \---transactions
+                axil_register_transaction.sv
+                

@@ -1,57 +1,34 @@
-`ifndef AXIL_REGISTER_DRIVER_SV
-`define AXIL_REGISTER_DRIVER_SV
+`ifndef AXIL_REGISTER_MASTER_DRIVER_SV
+`define AXIL_REGISTER_MASTER_DRIVER_SV
 
 `include "uvm_macros.svh"
 
-class axil_register_driver extends uvm_driver#(axil_register_transaction); // #后面跟的是driver需要传输的transaction的类型
-    `uvm_component_utils(axil_register_driver)
+class axil_register_master_driver extends axil_register_base_driver;
+    `uvm_component_utils(axil_register_master_driver)
 
-    virtual taxi_axil_if vif;
-
-    function new(string name = "axil_register_driver", uvm_component parent);
+    function new(string name = "axil_register_master_driver", uvm_component parent = null);
         super.new(name, parent);
     endfunction
 
-    virtual function void build_phase(uvm_phase phase);
-        super.build_phase(phase);
-    endfunction
-
-    virtual task run_phase(uvm_phase phase);
-        // 初始化信号，防止初始状态为不定态
-        vif.awvalid <= 1'b0;
-        vif.wvalid  <= 1'b0;
-        vif.arvalid <= 1'b0;
-
-        forever begin
-            `uvm_info(get_type_name(), $sformatf("Driver waiting for next item..."), UVM_LOW)
-            seq_item_port.get_next_item(req);
-            `uvm_info(get_type_name(), $sformatf("Driver got item: op=%0d addr=0x%08h", req.operation, req.addr), UVM_LOW)
-            drive_transfer(req);
-            seq_item_port.item_done();
-            `uvm_info(get_type_name(), $sformatf("Driver completed item: addr=0x%0h, resp=%0d", req.addr, req.resp), UVM_LOW)
-        end
-    endtask
-
-    extern task drive_transfer(axil_register_transaction tr);
+    extern task drive_transaction(axil_register_transaction tr);
 endclass
 
 // 该任务负责将数据按照协议时序发送给DUT
-task axil_register_driver::drive_transfer(axil_register_transaction tr);
+task axil_register_master_driver::drive_transaction(axil_register_transaction tr);
     int aw_wait_cnt = 0;
     int w_wait_cnt  = 0;
     int b_wait_cnt  = 0;
     int ar_wait_cnt = 0;
     int r_wait_cnt  = 0;
 
-    repeat(tr.delay) @(posedge vif.clk); // 为什么这里要等待几个时钟周期？
-                                         // 验证不同延迟下模块工作的稳定性
+    repeat(tr.delay) @(posedge vif.clk); // 验证不同延迟下模块工作的稳定性
                                          // 有delay时，模块保持空闲
                                          // 无delay时，模块进行连续传输
 
-    `uvm_info(get_type_name(), $sformatf("drive_transfer: op=%0d addr=0x%0h data=0x%0h strb=0x%0h", tr.operation, tr.addr, tr.data, tr.strb), UVM_MEDIUM)
+    `uvm_info(get_type_name(), $sformatf("drive_transaction: op=%0d addr=0x%0h data=0x%0h strb=0x%0h", tr.operation, tr.addr, tr.data, tr.strb), UVM_MEDIUM)
 
     if(tr.operation == axil_register_transaction::WRITE) begin // 在WRITE前面加上axil_register_transaction，是为了让编译器在变量WRITE对应的类中搜索该变量
-        `uvm_info(get_type_name(), "drive_transfer: starting AW/W parallel handshake", UVM_MEDIUM)
+        `uvm_info(get_type_name(), "drive_transaction: starting AW/W parallel handshake", UVM_MEDIUM)
 
         fork // 使用fork-join结构分别驱动AW和W通道是为了解耦二者的握手过程
             begin // 驱动AW通道
@@ -59,6 +36,7 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
                 vif.awprot  <= tr.prot;
                 vif.awuser  <= tr.user;
                 vif.awvalid <= 1'b1;
+
                 // 等待 awready，并且每隔 100 个时钟周期打印一次状态
                 while (!vif.awready) begin
                     @(posedge vif.clk);
@@ -67,8 +45,10 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
                         `uvm_warning(get_type_name(), $sformatf("AW waiting... cycles=%0d awvalid=%0b awready=%0b awaddr=0x%0h", aw_wait_cnt, vif.awvalid, vif.awready, vif.awaddr))
                     end
                 end
+
                 @(posedge vif.clk);
                 vif.awvalid <= 1'b0;
+
                 `uvm_info(get_type_name(), $sformatf("AW handshake done after %0d cycles, awready=%0b", aw_wait_cnt, vif.awready), UVM_LOW)
             end
 
@@ -77,6 +57,7 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
                 vif.wstrb   <= tr.strb;
                 vif.wuser   <= tr.user;
                 vif.wvalid  <= 1'b1;
+
                 while (!vif.wready) begin
                     @(posedge vif.clk);
                     w_wait_cnt++;
@@ -84,8 +65,10 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
                         `uvm_warning(get_type_name(), $sformatf("W waiting... cycles=%0d wvalid=%0b wready=%0b wdata=0x%0h", w_wait_cnt, vif.wvalid, vif.wready, vif.wdata))
                     end
                 end
+
                 @(posedge vif.clk);
                 vif.wvalid <= 1'b0;
+                
                 `uvm_info(get_type_name(), $sformatf("W handshake done after %0d cycles, wready=%0b", w_wait_cnt, vif.wready), UVM_LOW)
             end
         join
@@ -150,4 +133,4 @@ task axil_register_driver::drive_transfer(axil_register_transaction tr);
     end
 endtask
 
-`endif // AXIL_REGISTER_DRIVER_SV
+`endif // AXIL_REGISTER_MASTER_DRIVER_SV

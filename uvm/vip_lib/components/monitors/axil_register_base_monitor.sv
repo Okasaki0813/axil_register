@@ -28,6 +28,10 @@ class axil_register_base_monitor extends uvm_monitor;
 
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
+
+        if (!uvm_config_db#(virtual taxi_axil_if)::get(this, "", "vif", vif)) begin
+            `uvm_fatal(get_type_name(), "Virtual interface not found!")
+        end
     endfunction
 
     pure virtual task collect_write_data();

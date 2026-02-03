@@ -13,7 +13,8 @@ class axil_register_env extends uvm_env;
     axil_register_virtual_sequencer virt_sqr;
 
     axil_register_reg_block         rm;      
-    axil_register_reg_adapter       adapter;
+    axil_register_reg_adapter       reg_adapter;
+    axil_register_reg_predictor     reg_predictor;
 
     axil_register_config cfg;
 
