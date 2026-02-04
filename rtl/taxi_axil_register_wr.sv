@@ -335,7 +335,7 @@ end else if (W_REG_TYPE == 1) begin
     logic [DATA_W-1:0]   m_axil_wdata_reg  = '0;
     logic [STRB_W-1:0]   m_axil_wstrb_reg  = '0;
     logic [WUSER_W-1:0]  m_axil_wuser_reg  = '0;
-    logic                m_axil_wvalid_reg = 1'b0, 
+    logic                m_axil_wvalid_reg = 1'b0;
     logic                m_axil_wvalid_next;
 
     // datapath control
@@ -484,7 +484,7 @@ end else if (B_REG_TYPE == 1) begin
 
     logic [1:0]          s_axil_bresp_reg  = 2'b0;
     logic [BUSER_W-1:0]  s_axil_buser_reg  = '0;
-    logic                s_axil_bvalid_reg = 1'b0, 
+    logic                s_axil_bvalid_reg = 1'b0;
     logic                s_axil_bvalid_next;
 
     // datapath control

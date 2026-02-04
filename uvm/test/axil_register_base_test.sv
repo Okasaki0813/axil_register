@@ -1,15 +1,12 @@
 `ifndef UVM_TEST_AXIL_REGISTER_BASE_TEST_SV
 `define UVM_TEST_AXIL_REGISTER_BASE_TEST_SV
 
-`include "uvm_macros.svh"
-
 class axil_register_base_test extends uvm_test;
     `uvm_component_utils(axil_register_base_test)
 
     axil_register_env env;
-    axil_register_config cfg; // 实例化配置对象cfg
+    axil_register_config cfg;
 
-    // 添加 parent 参数默认值为 null，提高灵活性，避免调用时必须传 parent
     function new(string name = "axil_register_base_test", uvm_component parent = null);
         super.new(name, parent);
     endfunction
@@ -17,29 +14,25 @@ class axil_register_base_test extends uvm_test;
     virtual function void build_phase(uvm_phase phase);
         super.build_phase(phase);
 
-        // cfg 创建后立即进行空检查，防止使用空句柄导致难以排查的错误
         cfg = axil_register_config::type_id::create("cfg");
         if (cfg == null) begin
             `uvm_fatal("CFG_CREATE_FAIL", "Failed to create axil_register_config object!")
         end
 
-        // 检查cfg是否从top获取了vif并将其存入cfg对象中
-        if(!uvm_config_db#(virtual taxi_axil_if)::get(this, "", "vif", cfg.vif)) begin
-            `uvm_fatal("NOVIF", "Test layer cannot get virtual interface vif from config_db!")
-        end else begin
-            // 添加诊断信息，成功获取 vif 时打印确认，便于仿真日志追踪和调试
-            `uvm_info("VIF_GET_SUCCESS", "Virtual interface vif acquired successfully from config_db!", UVM_MEDIUM)
-        end
+        cfg.has_master      = 1;            // 默认启用master
+        cfg.has_slave       = 1;            // 默认启用slave  
+        cfg.enable_scb      = 1;            // 默认启用scoreboard
+        cfg.master_active   = UVM_ACTIVE;
+        cfg.slave_active    = UVM_ACTIVE;
+        cfg.enable_cov      = 0;            // 默认不收集覆盖率（提高仿真速度）
 
-        // 使用 "env*" 确保 env 及其所有子组件（如 agent）都能通过通配符拿到配置
-        uvm_config_db#(axil_register_config)::set(this, "env*", "cfg", cfg);
-
+        uvm_config_db#(axil_register_config)::set(this, "env", "cfg", cfg);
+        
         env = axil_register_env::type_id::create("env", this);
     endfunction
 
     task run_phase(uvm_phase phase);
-        super.run_phase(phase);
-        // 这里留空，具体的激励启动由 smoke_test 等子类实现
+        `uvm_info(get_type_name(), "Base test: No specific test defined", UVM_LOW)
     endtask
 
     // virtual function void end_of_elaboration_phase(uvm_phase phase);

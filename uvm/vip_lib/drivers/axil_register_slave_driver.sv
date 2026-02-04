@@ -1,18 +1,16 @@
-`ifndef AXIL_SLAVE_DRIVER_SV
-`define AXIL_SLAVE_DRIVER_SV
-
-`include "uvm_macros.svh"
+`ifndef AXIL_REGISTER_SLAVE_DRIVER_SV
+`define AXIL_REGISTER_SLAVE_DRIVER_SV
 
 class axil_register_slave_driver extends axil_register_base_driver;
     `uvm_component_utils(axil_register_slave_driver)
 
     // Slave特有的响应配置
     typedef enum {
-    RESP_OKAY    = 2'b00,  // 正常访问 OK (Normal Access)
-    RESP_EXOKAY  = 2'b01,  // 独占访问 OK (Exclusive Access OK) - 用于原子操作
-    RESP_SLVERR  = 2'b10,  // 从设备错误 (Slave Error) - Slave内部错误
-    RESP_DECERR  = 2'b11   // 解码错误 (Decode Error) - 地址无效/未映射
-} resp_type_t;
+        RESP_OKAY    = 2'b00,  // 正常访问 OK (Normal Access)
+        RESP_EXOKAY  = 2'b01,  // 独占访问 OK (Exclusive Access OK) - 用于原子操作
+        RESP_SLVERR  = 2'b10,  // 从设备错误 (Slave Error) - Slave内部错误
+        RESP_DECERR  = 2'b11   // 解码错误 (Decode Error) - 地址无效/未映射
+    } resp_type_t;
     
     resp_type_t default_resp = RESP_OKAY;
 

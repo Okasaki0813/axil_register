@@ -1,9 +1,9 @@
-`ifndef AXIL_REGISTER_TOP_SV
-`define AXIL_REGISTER_TOP_SV
+`ifndef AXIL_REGISTER_TB_SV
+`define AXIL_REGISTER_TB_SV
 
 `include "uvm_macros.svh"
 
-module top;
+module axil_register_tb;
     logic clk;
     logic rst;
 
@@ -81,4 +81,4 @@ module top;
     end
 endmodule
 
-`endif // AXIL_REGISTER_TOP_SV
+`endif // AXIL_REGISTER_TB_SV

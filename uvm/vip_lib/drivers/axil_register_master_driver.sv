@@ -10,6 +10,22 @@ class axil_register_master_driver extends axil_register_base_driver;
         super.new(name, parent);
     endfunction
 
+    virtual task run_phase(uvm_phase phase);
+        axil_register_transaction rsp;
+
+        forever begin
+            seq_item_port.get_next_item(req);
+
+            drive_transaction(req);
+
+            rsp = axil_register_transaction::type_id::create("rsp");
+            rsp.copy(req);
+
+            seq_item_port.put_response(rsp);
+
+            seq_item_port.item_done();
+        end
+    endtask
     extern task drive_transaction(axil_register_transaction tr);
 endclass
 

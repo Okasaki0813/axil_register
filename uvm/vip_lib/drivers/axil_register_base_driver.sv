@@ -4,11 +4,10 @@
 `include "uvm_macros.svh"
 
 class axil_register_base_driver extends uvm_driver#(axil_register_transaction);
+
     `uvm_component_utils(axil_register_base_driver)
 
     virtual taxi_axil_if vif;
-
-    axil_register_config cfg;
 
     function new(string name = "axil_register_base_driver", uvm_component parent = null);
         super.new(name, parent);
@@ -37,7 +36,9 @@ class axil_register_base_driver extends uvm_driver#(axil_register_transaction);
         end
     endfunction
 
-    pure virtual task drive_transaction(axil_register_transaction tr);
+    virtual task drive_transaction(axil_register_transaction tr);
+    endtask
+
 endclass
 
 `endif // AXIL_REGISTER_BASE_DRIVER_SV

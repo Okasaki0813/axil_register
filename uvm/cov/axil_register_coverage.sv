@@ -1,4 +1,5 @@
-`include "uvm_macros.svh"
+`ifndef AXIL_REGISTER_COVERAGE_SV
+`define AXIL_REGISTER_COVERAGE_SV
 
 class axil_register_coverage extends uvm_subscriber #(axil_register_transaction);
     `uvm_component_utils(axil_register_coverage)
@@ -35,3 +36,5 @@ class axil_register_coverage extends uvm_subscriber #(axil_register_transaction)
         axil_reg_cg.sample(); // 这里是通过采样数据统计覆盖率吗？
     endfunction
 endclass
+
+`endif // AXIL_REGISTER_COVERAGE_SV

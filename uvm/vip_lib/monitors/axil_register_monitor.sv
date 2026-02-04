@@ -1,33 +1,55 @@
-`ifndef AXIL_REGISTER_SLAVE_MONITOR_SV
-`define AXIL_REGISTER_SLAVE_MONITOR_SV
+`ifndef AXIL_REGISTER_MONITOR_SV
+`define AXIL_REGISTER_MONITOR_SV
 
-`include "uvm_macros.svh"
+class axil_register_monitor extends uvm_monitor;
+    `uvm_component_utils(axil_register_monitor)
 
-class axil_register_slave_monitor extends axil_register_base_monitor;
-    `uvm_component_utils(axil_register_slave_monitor)
+    virtual taxi_axil_if vif;
+    uvm_analysis_port#(axil_register_transaction) ap;
 
-    function new(string name = "axil_register_slave_monitor", uvm_component parent = null);
+    function new(string name, uvm_component parent = null);
         super.new(name, parent);
+    endfunction
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        ap = new("ap", this);
+    endfunction
+
+    virtual task run_phase(uvm_phase phase);
+        fork
+            collect_write_data();
+            collect_read_data();
+        join
+    endtask
+
+    function void connect_phase(uvm_phase phase);
+        super.connect_phase(phase);
+
+        if (!uvm_config_db#(virtual taxi_axil_if)::get(this, "", "vif", vif)) begin
+            `uvm_fatal(get_type_name(), "Virtual interface not found!")
+        end
     endfunction
 
     extern virtual task collect_write_data();
     extern virtual task collect_read_data();
 endclass
 
-task axil_register_slave_monitor::collect_write_data();
+task axil_register_monitor::collect_write_data();
     axil_register_transaction tr;
     bit aw_done, w_done;
 
     forever begin
-        aw_done = 1'b0;
-        w_done  = 1'b0;
-
         // 使用临时变量储存对应数据，防止在等待过程中被覆盖
         logic [ADDR_W-1:0]    temp_awaddr;
         logic [2:0]           temp_awprot;
 
         logic [DATA_W-1:0]    temp_wdata;
         logic [STRB_W-1:0]    temp_wstrb;
+
+        
+        aw_done = 1'b0;
+        w_done  = 1'b0;
 
         fork
             begin
@@ -61,12 +83,12 @@ task axil_register_slave_monitor::collect_write_data();
         tr.resp = vif.bresp;
         
         @(posedge vif.clk);
-        ap.write(tr);
+        ap.write(tr); // 将数据发送给scoreboard
         `uvm_info(get_type_name(), $sformatf("Collected a WRITE transaction, addr=0x%0h, data=0x%0h", tr.addr, tr.data), UVM_HIGH)
     end
 endtask
 
-task axil_register_slave_monitor::collect_read_data();
+task axil_register_monitor::collect_read_data();
     axil_register_transaction tr;
 
     forever begin
@@ -86,4 +108,5 @@ task axil_register_slave_monitor::collect_read_data();
         ap.write(tr);
     end
 endtask
-`endif // AXIL_REGISTER_SLAVE_MONITOR_SV
+
+`endif // AXIL_REGISTER_MONITOR_SV
